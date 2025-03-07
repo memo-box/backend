@@ -4,7 +4,7 @@ from .models import CustomUser, Box, Card, Language
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['url', 'username', 'email', 'is_staff', 'created_at', 'updated_at']
+        fields = ['url', 'email', 'name', 'is_staff', 'created_at', 'updated_at']
         read_only_fields = ['created_at', 'updated_at']
 
 class LanguageSerializer(serializers.ModelSerializer):
