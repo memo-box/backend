@@ -1,5 +1,7 @@
 from django.contrib.auth.models import AbstractUser, Group, Permission, BaseUserManager
 from django.db import models
+from django.utils import timezone
+import datetime
 
 
 class BaseModel(models.Model):
@@ -103,12 +105,42 @@ class Box(BaseModel):
 
 
 class Card(BaseModel):
+    # Fibonacci-like spaced repetition intervals (in days)
+    RECALL_INTERVALS = [1, 2, 3, 5, 8, 12, 18, 27, 41, 62, 93, 140, 210, 315, 473, 710, 1065, 1598, 2397, 3596, 5394, 8091]
+    
     source_text = models.TextField()
     target_text = models.TextField()
-    recall_count = models.IntegerField(default=0)
+    recall_count = models.IntegerField(default=0)  # Index into RECALL_INTERVALS
     last_recall = models.DateTimeField(null=True, blank=True)
     next_recall = models.DateTimeField(auto_now_add=True)
     box = models.ForeignKey(Box, on_delete=models.CASCADE)
 
     def __str__(self):
         return self.source_text
+        
+    def record_recall(self, remembered=True):
+        """
+        Record a recall event for this card and calculate the next recall date.
+        
+        Args:
+            remembered (bool): Whether the user remembered the card or not.
+                               If True, moves to next interval.
+                               If False, resets to first interval.
+        """
+        now = timezone.now()
+        self.last_recall = now
+        
+        if remembered:
+            # Move to the next interval if the user remembered
+            if self.recall_count < len(self.RECALL_INTERVALS) - 1:
+                self.recall_count += 1
+        else:
+            # Reset to the first interval if the user didn't remember
+            self.recall_count = 0
+            
+        # Calculate the next recall date
+        days_to_add = self.RECALL_INTERVALS[self.recall_count]
+        self.next_recall = now + datetime.timedelta(days=days_to_add)
+        
+        self.save()
+        return self.next_recall
