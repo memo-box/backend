@@ -6,4 +6,7 @@ readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
     "django>=5.1.6",
+    "django-rest-framework>=0.1.0",
+    "openai>=1.0.0",
+    "python-dotenv>=1.0.0",
 ]
