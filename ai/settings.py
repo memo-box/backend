@@ -1,4 +1,4 @@
-from models import LLMConfiguration
+from ai.models import LLMConfiguration
 import getpass
 import os
 from langchain_openai import ChatOpenAI
