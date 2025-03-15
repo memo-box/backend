@@ -1,14 +1,13 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from django.utils import timezone
 from .models import CustomUser, Language, Box, Card
 from .serializers import (
-    UserSerializer, 
-    LanguageSerializer, 
-    BoxSerializer, 
-    CardSerializer, 
-    CardRecallSerializer
+    UserSerializer,
+    LanguageSerializer,
+    BoxSerializer,
+    CardSerializer,
+    CardRecallSerializer,
 )
 
 
@@ -37,9 +36,9 @@ class BoxViewSet(viewsets.ModelViewSet):
 
 class CardViewSet(viewsets.ModelViewSet):
     queryset = Card.objects.all()
-    
+
     def get_serializer_class(self):
-        if self.action == 'recall':
+        if self.action == "recall":
             return CardRecallSerializer
         return CardSerializer
 
@@ -49,21 +48,20 @@ class CardViewSet(viewsets.ModelViewSet):
         by filtering against a `box` query parameter in the URL.
         """
         queryset = Card.objects.all()
-        box_id = self.request.query_params.get('box', None)
+        box_id = self.request.query_params.get("box", None)
         if box_id is not None:
             queryset = queryset.filter(box__id=box_id)
         return queryset
-   
-    @action(detail=True, methods=['post'])
+
+    @action(detail=True, methods=["post"])
     def recall(self, request, pk=None):
         """
         Record a recall event for a card.
         """
         card = self.get_object()
         serializer = self.get_serializer(card, data=request.data, partial=True)
-        
+
         if serializer.is_valid():
             serializer.save()
             return Response(serializer.data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
