@@ -1,5 +1,5 @@
 import pytest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 from langchain_core.messages import SystemMessage, HumanMessage
 from ai.usecases import GenerateBackCardUsecase
 
@@ -38,27 +38,27 @@ def test_generate(usecase, mock_llm):
     source_language = "en"
     target_language = "fr"
     expected_response = "Mocked LLM response"
-    
+
     # Execute
     result = usecase.generate(
         front_card=front_card,
         source_language=source_language,
-        target_language=target_language
+        target_language=target_language,
     )
-    
+
     # Verify
     assert result == expected_response
     # Check that LLM was called with right parameters
     mock_llm.invoke.assert_called_once()
     # Extract the call arguments
     called_args = mock_llm.invoke.call_args[0][0]
-    
+
     # Verify contents of the messages list
     assert len(called_args) == 2
     assert isinstance(called_args[0], SystemMessage)
     assert called_args[0].content == "Test system prompt"
     assert isinstance(called_args[1], HumanMessage)
-    
+
     # Verify that the user message contains all required information
     user_message = called_args[1].content
     assert f"front_card:```{front_card}```" in user_message
@@ -70,28 +70,26 @@ def test_generate_back_card_usecase_instance():
     """Test the pre-initialized instance of GenerateBackCardUsecase"""
     # Import the module but mock its components
     from ai.usecases import generate_back_card_usecase
-    
+
     # Create a new mock for direct replacement
     mock_response = Mock(content="Mocked result")
     original_llm = generate_back_card_usecase.llm
-    
+
     try:
         # Replace the LLM with our mock
         mock_llm = Mock()
         mock_llm.invoke.return_value = mock_response
         generate_back_card_usecase.llm = mock_llm
-        
+
         # Execute the test
         result = generate_back_card_usecase.generate(
-            front_card="Test card",
-            source_language="en", 
-            target_language="es"
+            front_card="Test card", source_language="en", target_language="es"
         )
-        
+
         # Verify
         assert result == "Mocked result"
         mock_llm.invoke.assert_called_once()
-    
+
     finally:
         # Restore the original LLM
-        generate_back_card_usecase.llm = original_llm 
+        generate_back_card_usecase.llm = original_llm
