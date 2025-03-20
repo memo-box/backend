@@ -12,3 +12,7 @@ def mock_chat_openai():
     mock = Mock(spec=ChatOpenAI)
     mock.invoke.return_value = Mock(content="Default mocked response")
     return mock
+
+
+# Fixtures for AI app tests
+# Using fixtures from root-level conftest.py

@@ -33,6 +33,12 @@ class BoxViewSet(viewsets.ModelViewSet):
         user = self.request.user
         return Box.objects.filter(user=user)
 
+    def perform_create(self, serializer):
+        """
+        Set the user to the current authenticated user when creating a box.
+        """
+        serializer.save(user=self.request.user)
+
 
 class CardViewSet(viewsets.ModelViewSet):
     queryset = Card.objects.all()

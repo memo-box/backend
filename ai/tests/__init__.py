@@ -1,1 +1,1 @@
-# Tests package for AI module
+# Tests package for AI app
