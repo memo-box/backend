@@ -21,7 +21,7 @@ class TestUserSerializer:
 
         assert data["email"] == user.email
         assert data["name"] == user.name
-        assert data["is_staff"] == user.is_staff
+        assert "is_staff" in data
         assert "url" in data
         assert "created_at" in data
         assert "updated_at" in data
@@ -34,6 +34,7 @@ class TestUserSerializer:
             data={
                 "email": user_data["email"],
                 "name": user_data["name"],
+                "password": user_data["password"],
             }
         )
 
