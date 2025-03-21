@@ -1,6 +1,7 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from .models import CustomUser, Language, Box, Card
 from .serializers import (
     UserSerializer,
@@ -24,6 +25,7 @@ class LanguageViewSet(viewsets.ModelViewSet):
 class BoxViewSet(viewsets.ModelViewSet):
     queryset = Box.objects.all()
     serializer_class = BoxSerializer
+    permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
         """
@@ -31,7 +33,9 @@ class BoxViewSet(viewsets.ModelViewSet):
         for the currently authenticated user.
         """
         user = self.request.user
-        return Box.objects.filter(user=user)
+        if user.is_authenticated:
+            return Box.objects.filter(user=user)
+        return Box.objects.none()  # Return empty queryset for anonymous users
 
     def perform_create(self, serializer):
         """
@@ -42,6 +46,7 @@ class BoxViewSet(viewsets.ModelViewSet):
 
 class CardViewSet(viewsets.ModelViewSet):
     queryset = Card.objects.all()
+    permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
         if self.action == "recall":
@@ -52,8 +57,15 @@ class CardViewSet(viewsets.ModelViewSet):
         """
         Optionally restricts the returned cards to a given box,
         by filtering against a `box` query parameter in the URL.
+        Additionally, restricts cards to those belonging to the current user.
         """
-        queryset = Card.objects.all()
+        user = self.request.user
+        if not user.is_authenticated:
+            return Card.objects.none()  # Return empty queryset for anonymous users
+
+        queryset = Card.objects.filter(
+            box__user=user
+        )  # Only show cards from user's boxes
         box_id = self.request.query_params.get("box", None)
         if box_id is not None:
             queryset = queryset.filter(box__id=box_id)
