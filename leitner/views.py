@@ -2,6 +2,7 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework_simplejwt.views import TokenObtainPairView
 from .models import CustomUser, Language, Box, Card
 from .serializers import (
     UserSerializer,
@@ -9,7 +10,14 @@ from .serializers import (
     BoxSerializer,
     CardSerializer,
     CardRecallSerializer,
+    CustomTokenObtainPairSerializer,
 )
+
+
+class CustomTokenObtainPairView(TokenObtainPairView):
+    """Custom token view that uses our enhanced serializer."""
+
+    serializer_class = CustomTokenObtainPairSerializer
 
 
 class UserViewSet(viewsets.ModelViewSet):

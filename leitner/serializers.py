@@ -1,5 +1,32 @@
 from rest_framework import serializers
 from .models import CustomUser, Box, Card, Language
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    """Custom token serializer that includes user details."""
+
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+
+        # Add custom claims
+        token["name"] = user.name
+        token["email"] = user.email
+        token["is_staff"] = user.is_staff
+
+        return token
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+
+        # Add extra responses here
+        data["user_id"] = self.user.id
+        data["email"] = self.user.email
+        data["name"] = self.user.name
+        data["is_staff"] = self.user.is_staff
+
+        return data
 
 
 class UserSerializer(serializers.ModelSerializer):
