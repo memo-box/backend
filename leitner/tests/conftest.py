@@ -27,14 +27,20 @@ def user(user_data):
 @pytest.fixture
 def other_user_data():
     """Returns data for another user."""
-    return {"email": "otheruser@example.com", "name": "Other User", "password": "testpass123"}
+    return {
+        "email": "otheruser@example.com",
+        "name": "Other User",
+        "password": "testpass123",
+    }
 
 
 @pytest.fixture
 def other_user(other_user_data):
     """Creates and returns another user."""
     return CustomUser.objects.create_user(
-        email=other_user_data["email"], name=other_user_data["name"], password=other_user_data["password"]
+        email=other_user_data["email"],
+        name=other_user_data["name"],
+        password=other_user_data["password"],
     )
 
 

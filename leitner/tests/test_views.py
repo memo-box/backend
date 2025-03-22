@@ -148,7 +148,9 @@ class TestBoxViewSet:
         assert response.data[0]["name"] == box.name
         assert response.data[0]["description"] == box.description
 
-    def test_list_boxes_filtered_by_user(self, authenticated_client, user, box, other_user, other_box):
+    def test_list_boxes_filtered_by_user(
+        self, authenticated_client, user, box, other_user, other_box
+    ):
         """Test that boxes are filtered by the authenticated user."""
         url = reverse("box-list")
         response = authenticated_client.get(url)
