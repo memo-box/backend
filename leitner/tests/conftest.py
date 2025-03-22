@@ -25,6 +25,20 @@ def user(user_data):
 
 
 @pytest.fixture
+def other_user_data():
+    """Returns data for another user."""
+    return {"email": "otheruser@example.com", "name": "Other User", "password": "testpass123"}
+
+
+@pytest.fixture
+def other_user(other_user_data):
+    """Creates and returns another user."""
+    return CustomUser.objects.create_user(
+        email=other_user_data["email"], name=other_user_data["name"], password=other_user_data["password"]
+    )
+
+
+@pytest.fixture
 def authenticated_client(api_client, user):
     """Returns an authenticated API client."""
     api_client.force_authenticate(user=user)
@@ -62,6 +76,24 @@ def box_data(user, languages):
 def box(box_data):
     """Creates and returns a box."""
     return Box.objects.create(**box_data)
+
+
+@pytest.fixture
+def other_box_data(other_user, languages):
+    """Returns data for another box."""
+    return {
+        "name": "Other Box",
+        "description": "Another test box",
+        "user": other_user,
+        "source_language": languages[0],
+        "target_language": languages[1],
+    }
+
+
+@pytest.fixture
+def other_box(other_box_data):
+    """Creates and returns another box."""
+    return Box.objects.create(**other_box_data)
 
 
 @pytest.fixture

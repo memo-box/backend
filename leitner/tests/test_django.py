@@ -1,21 +1,22 @@
+import uuid
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
+from datetime import timedelta
 from rest_framework import status
 from rest_framework.test import APIClient
 from leitner.models import CustomUser, Language, Box, Card
-from datetime import timedelta
-from django.utils import timezone
-import uuid
 
 
 class UserManagerTestCase(TestCase):
     """Tests for the CustomUserManager."""
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         # Generate a unique email prefix for this test class
-        self.email_prefix = str(uuid.uuid4())
-        self.user_data = {
-            "email": f"{self.email_prefix}@example.com",
+        cls.email_prefix = str(uuid.uuid4())
+        cls.user_data = {
+            "email": f"{cls.email_prefix}@example.com",
             "name": "Test User",
             "password": "testpass123",
         }
@@ -40,22 +41,40 @@ class UserManagerTestCase(TestCase):
 
     def test_create_superuser(self):
         """Test creating a superuser."""
-        unique_email = f"admin-{uuid.uuid4()}@example.com"
         admin_user = CustomUser.objects.create_superuser(
-            email=unique_email, password=self.user_data["password"]
+            email=self.user_data["email"], password=self.user_data["password"]
         )
-        self.assertEqual(admin_user.email, unique_email)
+        self.assertEqual(admin_user.email, self.user_data["email"])
         self.assertTrue(admin_user.is_staff)
         self.assertTrue(admin_user.is_superuser)
         self.assertEqual(admin_user.name, "Admin")  # Default name for superuser
+
+    def test_create_superuser_not_staff(self):
+        """Test creating a superuser with is_staff=False raises an error."""
+        with self.assertRaises(ValueError):
+            CustomUser.objects.create_superuser(
+                email=self.user_data["email"],
+                password=self.user_data["password"],
+                is_staff=False,
+            )
+
+    def test_create_superuser_not_superuser(self):
+        """Test creating a superuser with is_superuser=False raises an error."""
+        with self.assertRaises(ValueError):
+            CustomUser.objects.create_superuser(
+                email=self.user_data["email"],
+                password=self.user_data["password"],
+                is_superuser=False,
+            )
 
 
 class UserModelTestCase(TestCase):
     """Tests for the CustomUser model."""
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         unique_email = f"user-{uuid.uuid4()}@example.com"
-        self.user = CustomUser.objects.create_user(
+        cls.user = CustomUser.objects.create_user(
             email=unique_email, name="Test User", password="testpass123"
         )
 
@@ -78,14 +97,10 @@ class UserModelTestCase(TestCase):
 class LanguageModelTestCase(TestCase):
     """Tests for the Language model."""
 
-    def setUp(self):
-        self.language_data = {"name": "English", "code": "en"}
-        self.language = Language.objects.create(**self.language_data)
-
-    def test_create_language(self):
-        """Test creating a language."""
-        self.assertEqual(self.language.name, self.language_data["name"])
-        self.assertEqual(self.language.code, self.language_data["code"])
+    @classmethod
+    def setUpTestData(cls):
+        cls.language_data = {"name": "English", "code": "en"}
+        cls.language = Language.objects.create(**cls.language_data)
 
     def test_str_method(self):
         """Test the string representation of a language."""
@@ -95,29 +110,22 @@ class LanguageModelTestCase(TestCase):
 class BoxModelTestCase(TestCase):
     """Tests for the Box model."""
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         unique_email = f"box-user-{uuid.uuid4()}@example.com"
-        self.user = CustomUser.objects.create_user(
+        cls.user = CustomUser.objects.create_user(
             email=unique_email, name="Test User", password="testpass123"
         )
-        self.source_language = Language.objects.create(name="English", code="en")
-        self.target_language = Language.objects.create(name="Spanish", code="es")
-        self.box_data = {
+        cls.source_language = Language.objects.create(name="English", code="en")
+        cls.target_language = Language.objects.create(name="Spanish", code="es")
+        cls.box_data = {
             "name": "Test Box",
             "description": "A test box",
-            "user": self.user,
-            "source_language": self.source_language,
-            "target_language": self.target_language,
+            "user": cls.user,
+            "source_language": cls.source_language,
+            "target_language": cls.target_language,
         }
-        self.box = Box.objects.create(**self.box_data)
-
-    def test_create_box(self):
-        """Test creating a box."""
-        self.assertEqual(self.box.name, self.box_data["name"])
-        self.assertEqual(self.box.description, self.box_data["description"])
-        self.assertEqual(self.box.user, self.box_data["user"])
-        self.assertEqual(self.box.source_language, self.box_data["source_language"])
-        self.assertEqual(self.box.target_language, self.box_data["target_language"])
+        cls.box = Box.objects.create(**cls.box_data)
 
     def test_str_method(self):
         """Test the string representation of a box."""
@@ -132,35 +140,27 @@ class BoxModelTestCase(TestCase):
 class CardModelTestCase(TestCase):
     """Tests for the Card model."""
 
-    def setUp(self):
+    @classmethod
+    def setUpTestData(cls):
         unique_email = f"card-user-{uuid.uuid4()}@example.com"
-        self.user = CustomUser.objects.create_user(
+        cls.user = CustomUser.objects.create_user(
             email=unique_email, name="Test User", password="testpass123"
         )
-        self.source_language = Language.objects.create(name="English", code="en")
-        self.target_language = Language.objects.create(name="Spanish", code="es")
-        self.box = Box.objects.create(
+        cls.source_language = Language.objects.create(name="English", code="en")
+        cls.target_language = Language.objects.create(name="Spanish", code="es")
+        cls.box = Box.objects.create(
             name="Test Box",
             description="A test box",
-            user=self.user,
-            source_language=self.source_language,
-            target_language=self.target_language,
+            user=cls.user,
+            source_language=cls.source_language,
+            target_language=cls.target_language,
         )
-        self.card_data = {
+        cls.card_data = {
             "source_text": "Hello",
             "target_text": "Hola",
-            "box": self.box,
+            "box": cls.box,
         }
-        self.card = Card.objects.create(**self.card_data)
-
-    def test_create_card(self):
-        """Test creating a card."""
-        self.assertEqual(self.card.source_text, self.card_data["source_text"])
-        self.assertEqual(self.card.target_text, self.card_data["target_text"])
-        self.assertEqual(self.card.box, self.card_data["box"])
-        self.assertEqual(self.card.recall_count, 0)
-        self.assertIsNone(self.card.last_recall)
-        self.assertIsNotNone(self.card.next_recall)
+        cls.card = Card.objects.create(**cls.card_data)
 
     def test_str_method(self):
         """Test the string representation of a card."""
@@ -214,17 +214,31 @@ class CardModelTestCase(TestCase):
         # Check that the method returns the next recall date
         self.assertEqual(next_recall, self.card.next_recall)
 
+    def test_record_recall_at_max_interval(self):
+        """Test recording a successful recall when already at max interval."""
+        # Set to the maximum interval
+        self.card.recall_count = len(Card.RECALL_INTERVALS) - 1
+        self.card.save()
+
+        next_recall = self.card.record_recall(remembered=True)
+
+        # Check that recall count stays at max
+        self.assertEqual(self.card.recall_count, len(Card.RECALL_INTERVALS) - 1)
+        # Check that the method returns the next recall date
+        self.assertEqual(next_recall, self.card.next_recall)
+
 
 class UserViewSetTestCase(TestCase):
     """Tests for the UserViewSet."""
 
-    def setUp(self):
-        self.client = APIClient()
+    @classmethod
+    def setUpTestData(cls):
+        cls.client = APIClient()
         unique_email = f"view-user-{uuid.uuid4()}@example.com"
-        self.user = CustomUser.objects.create_user(
+        cls.user = CustomUser.objects.create_user(
             email=unique_email, name="Test User", password="testpass123"
         )
-        self.client.force_authenticate(user=self.user)
+        cls.client.force_authenticate(user=cls.user)
 
     def test_list_users(self):
         """Test listing users."""
@@ -245,35 +259,42 @@ class UserViewSetTestCase(TestCase):
         self.assertEqual(response.data["email"], self.user.email)
         self.assertEqual(response.data["name"], self.user.name)
 
-    def test_create_user(self):
-        """Test creating a new user."""
-        url = reverse("customuser-list")
-        data = {
-            "email": f"newuser-{uuid.uuid4()}@example.com",
-            "name": "New User",
-            "password": "newpass123",
-        }
-        response = self.client.post(url, data)
+    def test_update_user(self):
+        """Test updating a user."""
+        url = reverse("customuser-detail", kwargs={"pk": self.user.pk})
+        data = {"name": "Updated Name"}
+        response = self.client.patch(url, data, content_type="application/json")
 
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data["email"], data["email"])
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], data["name"])
 
-        # Confirm user is in database
-        self.assertTrue(CustomUser.objects.filter(email=data["email"]).exists())
+        # Confirm user is updated in database
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.name, data["name"])
+
+    def test_delete_user(self):
+        """Test deleting a user."""
+        url = reverse("customuser-detail", kwargs={"pk": self.user.pk})
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Confirm user is deleted from database
+        self.assertFalse(CustomUser.objects.filter(pk=self.user.pk).exists())
 
 
 class LanguageViewSetTestCase(TestCase):
     """Tests for the LanguageViewSet."""
 
-    def setUp(self):
-        self.client = APIClient()
+    @classmethod
+    def setUpTestData(cls):
+        cls.client = APIClient()
         unique_email = f"lang-user-{uuid.uuid4()}@example.com"
-        self.user = CustomUser.objects.create_user(
+        cls.user = CustomUser.objects.create_user(
             email=unique_email, name="Test User", password="testpass123"
         )
-        self.client.force_authenticate(user=self.user)
-        self.language = Language.objects.create(name="English", code="en")
+        cls.client.force_authenticate(user=cls.user)
+        cls.language = Language.objects.create(name="English", code="en")
 
     def test_list_languages(self):
         """Test listing languages."""
@@ -282,8 +303,8 @@ class LanguageViewSetTestCase(TestCase):
 
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertGreaterEqual(len(response.data), 1)
-        language_names = [lang["name"] for lang in response.data]
-        self.assertIn(self.language.name, language_names)
+        self.assertEqual(response.data[0]["name"], self.language.name)
+        self.assertEqual(response.data[0]["code"], self.language.code)
 
     def test_retrieve_language(self):
         """Test retrieving a specific language."""
@@ -293,3 +314,26 @@ class LanguageViewSetTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["name"], self.language.name)
         self.assertEqual(response.data["code"], self.language.code)
+
+    def test_update_language(self):
+        """Test updating a language."""
+        url = reverse("language-detail", kwargs={"pk": self.language.pk})
+        data = {"name": "Updated Language"}
+        response = self.client.patch(url, data, content_type="application/json")
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data["name"], data["name"])
+
+        # Confirm language is updated in database
+        self.language.refresh_from_db()
+        self.assertEqual(self.language.name, data["name"])
+
+    def test_delete_language(self):
+        """Test deleting a language."""
+        url = reverse("language-detail", kwargs={"pk": self.language.pk})
+        response = self.client.delete(url)
+
+        self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Confirm language is deleted from database
+        self.assertFalse(Language.objects.filter(pk=self.language.pk).exists())

@@ -59,18 +59,13 @@ class TestUserViewSet:
 
     def test_delete_user(self, authenticated_client, user):
         """Test deleting a user."""
-        # Create a second user to delete
-        second_user = CustomUser.objects.create_user(
-            email="seconduser@example.com", name="Second User", password="testpass123"
-        )
-
-        url = reverse("customuser-detail", kwargs={"pk": second_user.pk})
+        url = reverse("customuser-detail", kwargs={"pk": user.pk})
         response = authenticated_client.delete(url)
 
         assert response.status_code == status.HTTP_204_NO_CONTENT
 
         # Confirm user is deleted from database
-        assert not CustomUser.objects.filter(pk=second_user.pk).exists()
+        assert not CustomUser.objects.filter(pk=user.pk).exists()
 
 
 @pytest.mark.django_db
@@ -153,21 +148,8 @@ class TestBoxViewSet:
         assert response.data[0]["name"] == box.name
         assert response.data[0]["description"] == box.description
 
-    def test_list_boxes_filtered_by_user(self, authenticated_client, user, box):
+    def test_list_boxes_filtered_by_user(self, authenticated_client, user, box, other_user, other_box):
         """Test that boxes are filtered by the authenticated user."""
-        # Create another user with a box
-        other_user = CustomUser.objects.create_user(
-            email="otheruser@example.com", name="Other User", password="testpass123"
-        )
-
-        other_box = Box.objects.create(
-            name="Other Box",
-            description="Another test box",
-            user=other_user,
-            source_language=box.source_language,
-            target_language=box.target_language,
-        )
-
         url = reverse("box-list")
         response = authenticated_client.get(url)
 

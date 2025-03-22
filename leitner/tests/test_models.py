@@ -107,9 +107,8 @@ class TestBox:
         """Test the string representation of a box."""
         assert str(box) == box.name
 
-    def test_user_box_relationship(self, user, box_data):
+    def test_user_box_relationship(self, user, box):
         """Test the relationship between user and box."""
-        box = Box.objects.create(**box_data)
         user_boxes = Box.objects.filter(user=user)
         assert box in user_boxes
 

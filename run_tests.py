@@ -2,39 +2,32 @@
 import os
 import sys
 import django
-import subprocess
-from django.conf import settings
-from django.test.utils import get_runner
+from dotenv import load_dotenv
 
-if __name__ == "__main__":
-    os.environ["DJANGO_SETTINGS_MODULE"] = "memobox.settings"
-    django.setup()
+# Set test environment variables directly
+os.environ.update({
+    'DJANGO_SETTINGS_MODULE': 'memobox.settings',
+    'SECRET_KEY': 'django-insecure-test-key-not-for-production',
+    'DEBUG': 'True',
+    'ALLOWED_HOSTS': 'localhost,127.0.0.1',
+    'DATABASE_URL': 'sqlite:///test_db.sqlite3',
+    'JWT_ACCESS_TOKEN_LIFETIME': '60',
+    'JWT_REFRESH_TOKEN_LIFETIME': '1',
+    'STATIC_URL': '/static/',
+    'MEDIA_URL': '/media/',
+    'EMAIL_BACKEND': 'django.core.mail.backends.console.EmailBackend',
+    'EMAIL_HOST': 'localhost',
+    'EMAIL_PORT': '25',
+    'EMAIL_USE_TLS': 'False',
+    'EMAIL_HOST_USER': 'test@example.com',
+    'EMAIL_HOST_PASSWORD': 'testpass',
+    'OPENAI_API_KEY': 'test-key-not-for-production',
+    'OPENAI_MODEL': 'gpt-4-mini',
+})
 
-    # Check if we should run with pytest
-    use_pytest = len(sys.argv) > 1 and sys.argv[1] == "--pytest"
+# Initialize Django
+django.setup()
 
-    if use_pytest:
-        # Run tests with pytest
-        pytest_args = (
-            sys.argv[2:] if len(sys.argv) > 2 else ["leitner/tests/", "ai/tests/"]
-        )
-        exit_code = subprocess.call(["pytest"] + pytest_args)
-        sys.exit(exit_code)
-    else:
-        # Run tests with Django test runner
-        TestRunner = get_runner(settings)
-        test_runner = TestRunner()
-
-        # List all test modules manually
-        test_modules = [
-            "leitner.tests.test_models",
-            "leitner.tests.test_serializers",
-            "leitner.tests.test_views",
-            "leitner.tests.test_django",
-            "ai.tests.test_serializers",
-            "ai.tests.test_views",
-            "ai.tests.test_django",
-        ]
-
-        failures = test_runner.run_tests(test_modules)
-        sys.exit(bool(failures))
+if __name__ == '__main__':
+    import pytest
+    sys.exit(pytest.main(sys.argv[1:]))
