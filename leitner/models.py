@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser, Group, Permission, BaseUser
 from django.db import models
 from django.utils import timezone
 import datetime
-from .constants import LANGUAGE_CHOICES
+from .constants import LANGUAGE_CHOICES, RECALL_INTERVALS
 
 
 class BaseModel(models.Model):
@@ -83,8 +83,6 @@ class CustomUser(AbstractUser, BaseModel):
 
 
 class Language(BaseModel):
-    """Model representing a language."""
-
     name = models.CharField(max_length=100, unique=True)
     code = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, unique=True)
 
@@ -92,7 +90,7 @@ class Language(BaseModel):
         return self.get_code_display()
 
     class Meta:
-        ordering = ["code"]
+        ordering = ['code']
 
 
 class Box(BaseModel):
@@ -111,31 +109,7 @@ class Box(BaseModel):
 
 
 class Card(BaseModel):
-    # Fibonacci-like spaced repetition intervals (in days)
-    RECALL_INTERVALS = [
-        1,
-        2,
-        3,
-        5,
-        8,
-        12,
-        18,
-        27,
-        41,
-        62,
-        93,
-        140,
-        210,
-        315,
-        473,
-        710,
-        1065,
-        1598,
-        2397,
-        3596,
-        5394,
-        8091,
-    ]
+   
 
     source_text = models.TextField()
     target_text = models.TextField()
@@ -161,14 +135,14 @@ class Card(BaseModel):
 
         if remembered:
             # Move to the next interval if the user remembered
-            if self.recall_count < len(self.RECALL_INTERVALS) - 1:
+            if self.recall_count < len(RECALL_INTERVALS) - 1:
                 self.recall_count += 1
         else:
             # Reset to the first interval if the user didn't remember
             self.recall_count = 0
 
         # Calculate the next recall date
-        days_to_add = self.RECALL_INTERVALS[self.recall_count]
+        days_to_add = RECALL_INTERVALS[self.recall_count]
         self.next_recall = now + datetime.timedelta(days=days_to_add)
 
         self.save()
