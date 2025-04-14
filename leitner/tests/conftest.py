@@ -113,9 +113,17 @@ def card_data(box):
 
 
 @pytest.fixture
-def card(card_data):
-    """Creates and returns a card."""
-    return Card.objects.create(**card_data)
+def card(box):
+    """Create a test card."""
+    from django.utils import timezone
+    import datetime
+
+    return Card.objects.create(
+        source_text="Hello",
+        target_text="Hola",
+        box=box,
+        next_recall=timezone.now() + datetime.timedelta(days=7),  # Set future date
+    )
 
 
 @pytest.fixture

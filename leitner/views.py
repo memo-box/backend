@@ -1,4 +1,5 @@
 from rest_framework import viewsets, status
+from django.utils import timezone
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
@@ -21,17 +22,17 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 
 
 class UserViewSet(viewsets.ModelViewSet):
-    queryset = CustomUser.objects.all()
+    queryset = CustomUser.objects.all().order_by("id")
     serializer_class = UserSerializer
 
 
 class LanguageViewSet(viewsets.ModelViewSet):
-    queryset = Language.objects.all()
+    queryset = Language.objects.all().order_by("id")
     serializer_class = LanguageSerializer
 
 
 class BoxViewSet(viewsets.ModelViewSet):
-    queryset = Box.objects.all()
+    queryset = Box.objects.all().order_by("id")
     serializer_class = BoxSerializer
     permission_classes = [IsAuthenticated]
 
@@ -42,7 +43,7 @@ class BoxViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         if user.is_authenticated:
-            return Box.objects.filter(user=user)
+            return Box.objects.filter(user=user).order_by("id")
         return Box.objects.none()  # Return empty queryset for anonymous users
 
     def perform_create(self, serializer):
@@ -53,7 +54,20 @@ class BoxViewSet(viewsets.ModelViewSet):
 
 
 class CardViewSet(viewsets.ModelViewSet):
-    queryset = Card.objects.all()
+    """
+    ViewSet for managing cards.
+
+    list:
+        Get a list of all cards belonging to the authenticated user.
+        Can be filtered by box_id and due_only parameters.
+
+    Parameters:
+        box (int): Optional. Filter cards by box ID.
+        due_only (str): Optional. If "true", only returns cards that are due for review
+                       (next_recall <= current time).
+    """
+
+    queryset = Card.objects.all().order_by("id")
     permission_classes = [IsAuthenticated]
 
     def get_serializer_class(self):
@@ -66,17 +80,28 @@ class CardViewSet(viewsets.ModelViewSet):
         Optionally restricts the returned cards to a given box,
         by filtering against a `box` query parameter in the URL.
         Additionally, restricts cards to those belonging to the current user.
+        Can also filter to show only cards that are due for review.
+
+        Parameters:
+            box (int): Optional box ID to filter cards by. If not provided,
+                      returns all cards from all boxes belonging to the user.
+            due_only (str): Optional. If "true", only returns cards that are due
+                          for review (next_recall <= current time).
         """
         user = self.request.user
         if not user.is_authenticated:
-            return Card.objects.none()  # Return empty queryset for anonymous users
+            return Card.objects.none()
 
-        queryset = Card.objects.filter(
-            box__user=user
-        )  # Only show cards from user's boxes
+        queryset = Card.objects.filter(box__user=user).order_by("id")
+
         box_id = self.request.query_params.get("box", None)
         if box_id is not None:
             queryset = queryset.filter(box__id=box_id)
+
+        due_only = self.request.query_params.get("due_only", None)
+        if due_only == "true":
+            queryset = queryset.filter(next_recall__lte=timezone.now())
+
         return queryset
 
     @action(detail=True, methods=["post"])

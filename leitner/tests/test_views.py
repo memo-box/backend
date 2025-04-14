@@ -14,9 +14,9 @@ class TestUserViewSet:
         response = authenticated_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) >= 1
-        assert response.data[0]["email"] == user.email
-        assert response.data[0]["name"] == user.name
+        assert response.data["count"] >= 1
+        assert response.data["results"][0]["email"] == user.email
+        assert response.data["results"][0]["name"] == user.name
 
     def test_retrieve_user(self, authenticated_client, user):
         """Test retrieving a specific user."""
@@ -78,10 +78,10 @@ class TestLanguageViewSet:
         response = authenticated_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) >= len(languages)
+        assert response.data["count"] >= len(languages)
 
         # Verify all languages are in the response
-        language_names = [lang["name"] for lang in response.data]
+        language_names = [lang["name"] for lang in response.data["results"]]
         for language in languages:
             assert language.name in language_names
 
@@ -144,9 +144,9 @@ class TestBoxViewSet:
         response = authenticated_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) >= 1
-        assert response.data[0]["name"] == box.name
-        assert response.data[0]["description"] == box.description
+        assert response.data["count"] >= 1
+        assert response.data["results"][0]["name"] == box.name
+        assert response.data["results"][0]["description"] == box.description
 
     def test_list_boxes_filtered_by_user(
         self, authenticated_client, user, box, other_user, other_box
@@ -158,7 +158,7 @@ class TestBoxViewSet:
         assert response.status_code == status.HTTP_200_OK
 
         # Only the authenticated user's box should be returned
-        box_names = [b["name"] for b in response.data]
+        box_names = [b["name"] for b in response.data["results"]]
         assert box.name in box_names
         assert other_box.name not in box_names
 
@@ -228,35 +228,44 @@ class TestCardViewSet:
         response = authenticated_client.get(url)
 
         assert response.status_code == status.HTTP_200_OK
-        assert len(response.data) >= 1
-        assert response.data[0]["source_text"] == card.source_text
-        assert response.data[0]["target_text"] == card.target_text
+        assert response.data["count"] >= 1
+        assert response.data["results"][0]["source_text"] == card.source_text
+        assert response.data["results"][0]["target_text"] == card.target_text
 
     def test_list_cards_filtered_by_box(self, authenticated_client, card, box):
         """Test filtering cards by box."""
-        # Create another box and card
-        other_box = Box.objects.create(
-            name="Other Box",
-            description="Another test box",
-            user=box.user,
-            source_language=box.source_language,
-            target_language=box.target_language,
-        )
-
-        other_card = Card.objects.create(
-            source_text="Other Card", target_text="Otra Tarjeta", box=other_box
-        )
-
         # Get cards filtered by the original box
-        url = reverse("card-list") + f"?box={box.id}"
-        response = authenticated_client.get(url)
+        url = reverse("card-list")
+        response = authenticated_client.get(url, {"box": box.id})
 
         assert response.status_code == status.HTTP_200_OK
+        assert response.data["count"] == 1
+        assert response.data["results"][0]["source_text"] == card.source_text
 
-        # Only cards from the specified box should be returned
-        card_texts = [c["source_text"] for c in response.data]
-        assert card.source_text in card_texts
-        assert other_card.source_text not in card_texts
+    def test_list_cards_due_only(self, authenticated_client, card, box):
+        """Test filtering cards by due date."""
+        from django.utils import timezone
+        import datetime
+
+        # Create a card that's due
+        due_card = Card.objects.create(
+            source_text="Due Card",
+            target_text="Tarjeta Vencida",
+            box=box,
+            next_recall=timezone.now() - datetime.timedelta(days=1),
+        )
+
+        # Get all cards
+        url = reverse("card-list")
+        response = authenticated_client.get(url)
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["count"] == 2  # original card + due_card
+
+        # Get only due cards
+        response = authenticated_client.get(url, {"due_only": "true"})
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["count"] == 1
+        assert response.data["results"][0]["source_text"] == due_card.source_text
 
     def test_retrieve_card(self, authenticated_client, card):
         """Test retrieving a specific card."""

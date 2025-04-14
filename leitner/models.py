@@ -135,7 +135,7 @@ class Card(BaseModel):
     target_text = models.TextField()
     recall_count = models.IntegerField(default=0)  # Index into RECALL_INTERVALS
     last_recall = models.DateTimeField(null=True, blank=True)
-    next_recall = models.DateTimeField(auto_now_add=True)
+    next_recall = models.DateTimeField(default=timezone.now)
     box = models.ForeignKey(Box, on_delete=models.CASCADE)
 
     def __str__(self):
