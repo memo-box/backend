@@ -1,4 +1,4 @@
-from rest_framework import viewsets, status
+from rest_framework import viewsets, status, serializers
 from django.utils import timezone
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -13,6 +13,7 @@ from .serializers import (
     CardRecallSerializer,
     CustomTokenObtainPairSerializer,
 )
+from .constants import SUPPORTED_LANGUAGES
 
 
 class CustomTokenObtainPairView(TokenObtainPairView):
@@ -27,8 +28,34 @@ class UserViewSet(viewsets.ModelViewSet):
 
 
 class LanguageViewSet(viewsets.ModelViewSet):
-    queryset = Language.objects.all().order_by("id")
+    """
+    ViewSet for managing languages.
+    Users can only select from predefined languages.
+    """
+
+    queryset = Language.objects.all().order_by("code")
     serializer_class = LanguageSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        """
+        Return all languages, ordered by name.
+        """
+        return Language.objects.all().order_by("name")
+
+    def perform_create(self, serializer):
+        """
+        Create a new language, ensuring it's one of the supported languages.
+        """
+        name = serializer.validated_data.get("name")
+        code = serializer.validated_data.get("code")
+
+        if name not in SUPPORTED_LANGUAGES or code not in SUPPORTED_LANGUAGES.values():
+            raise serializers.ValidationError(
+                "Language must be one of the supported languages."
+            )
+
+        serializer.save()
 
 
 class BoxViewSet(viewsets.ModelViewSet):

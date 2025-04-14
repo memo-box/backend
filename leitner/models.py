@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser, Group, Permission, BaseUser
 from django.db import models
 from django.utils import timezone
 import datetime
+from .constants import LANGUAGE_CHOICES
 
 
 class BaseModel(models.Model):
@@ -82,11 +83,16 @@ class CustomUser(AbstractUser, BaseModel):
 
 
 class Language(BaseModel):
-    name = models.CharField(max_length=255)
-    code = models.CharField(max_length=255)
+    """Model representing a language."""
+
+    name = models.CharField(max_length=100, unique=True)
+    code = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, unique=True)
 
     def __str__(self):
-        return self.name
+        return self.get_code_display()
+
+    class Meta:
+        ordering = ["code"]
 
 
 class Box(BaseModel):

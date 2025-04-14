@@ -99,7 +99,7 @@ class TestLanguageViewSet:
         url = reverse("language-list")
         data = {
             "name": "French",
-            "code": "fr",
+            "code": "FR",
         }
         response = authenticated_client.post(url, data)
 
