@@ -40,6 +40,7 @@ class GenerateTopicUsecase:
         if count > 50:
             raise ValueError("Count must be less than 50")
         user_message = f"topic:```{topic}```, source_language:{source_language}, target_language:{target_language}, count:{count}"
+
         messages = [
             SystemMessage(content=self.prompt),
             HumanMessage(content=user_message),
