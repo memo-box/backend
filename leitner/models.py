@@ -95,7 +95,7 @@ class Language(BaseModel):
 
 class Box(BaseModel):
     name = models.CharField(max_length=255)
-    description = models.TextField()
+    description = models.TextField(null=True, blank=True)
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
     source_language = models.ForeignKey(
         Language, on_delete=models.CASCADE, related_name="source_boxes"
