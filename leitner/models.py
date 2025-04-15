@@ -90,7 +90,7 @@ class Language(BaseModel):
         return self.get_code_display()
 
     class Meta:
-        ordering = ['code']
+        ordering = ["code"]
 
 
 class Box(BaseModel):
@@ -109,8 +109,6 @@ class Box(BaseModel):
 
 
 class Card(BaseModel):
-   
-
     source_text = models.TextField()
     target_text = models.TextField()
     recall_count = models.IntegerField(default=0)  # Index into RECALL_INTERVALS

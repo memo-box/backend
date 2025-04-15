@@ -18,3 +18,13 @@ back_card_llm = ChatOpenAI(
     temperature=back_card_setting.temperature,
     max_tokens=back_card_setting.max_tokens,
 )
+
+topic_generation_setting = LLMConfiguration(
+    model_name=os.getenv("OPENAI_MODEL_NAME"), temperature=1, max_tokens=3000
+)
+
+topic_generation_llm = ChatOpenAI(
+    model=topic_generation_setting.model_name,
+    temperature=topic_generation_setting.temperature,
+    max_tokens=topic_generation_setting.max_tokens,
+)
