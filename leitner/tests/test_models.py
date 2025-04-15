@@ -3,6 +3,7 @@ from django.utils import timezone
 from datetime import timedelta
 from leitner.models import CustomUser, Language, Box, Card
 from leitner.constants import RECALL_INTERVALS
+from django.test import TestCase
 
 
 @pytest.mark.django_db
@@ -78,17 +79,20 @@ class TestCustomUser:
 class TestLanguage:
     """Tests for the Language model."""
 
-    def test_create_language(self, language_data):
-        """Test creating a language."""
-        language = Language.objects.create(
-            name=language_data[0]["name"], code=language_data[0]["code"]
-        )
-        assert language.name == language_data[0]["name"]
-        assert language.code == language_data[0]["code"]
+    def test_create_language(self):
+        """Test creating a unique language."""
+        # Use a unique name/code not present in the initial migration data
+        language = Language.objects.create(name="Klingon", code="tlh")
+        assert language.name == "Klingon"
+        assert language.code == "tlh"
+        assert language.created_at is not None
+        assert language.updated_at is not None
 
     def test_str_method(self, languages):
-        """Test the string representation of a language."""
-        assert str(languages[0]) == languages[0].code
+        """Test the string representation of the Language model."""
+        # Ensure the fixture languages are available
+        english = next(lang for lang in languages if lang.code == "en")
+        assert str(english) == "en"
 
 
 @pytest.mark.django_db
@@ -108,9 +112,11 @@ class TestBox:
         """Test the string representation of a box."""
         assert str(box) == box.name
 
-    def test_user_box_relationship(self, user, box):
+    def test_user_box_relationship(self, box):
         """Test the relationship between user and box."""
-        user_boxes = Box.objects.filter(user=user)
+        # Get the user associated with the box fixture
+        user_of_box = box.user
+        user_boxes = Box.objects.filter(user=user_of_box)
         assert box in user_boxes
 
 

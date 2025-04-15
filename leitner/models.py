@@ -2,7 +2,7 @@ from django.contrib.auth.models import AbstractUser, Group, Permission, BaseUser
 from django.db import models
 from django.utils import timezone
 import datetime
-from .constants import LANGUAGE_CHOICES, RECALL_INTERVALS
+from .constants import RECALL_INTERVALS
 
 
 class BaseModel(models.Model):
@@ -84,10 +84,10 @@ class CustomUser(AbstractUser, BaseModel):
 
 class Language(BaseModel):
     name = models.CharField(max_length=100, unique=True)
-    code = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, unique=True)
+    code = models.CharField(max_length=10, unique=True)
 
     def __str__(self):
-        return self.get_code_display()
+        return self.code
 
     class Meta:
         ordering = ["code"]

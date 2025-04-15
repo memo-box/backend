@@ -9,6 +9,8 @@ from leitner.serializers import (
     CardRecallSerializer,
 )
 from leitner.constants import RECALL_INTERVALS
+from rest_framework import serializers
+from ..models import Language, Box, Card
 
 
 @pytest.mark.django_db
@@ -60,18 +62,21 @@ class TestLanguageSerializer:
         assert "created_at" in data
         assert "updated_at" in data
 
-    def test_deserialization(self, language_data):
+    def test_deserialization(self):
         """Test deserializing language data (name only, code is read-only)."""
         # Serializer treats code as read-only, so only needs name.
+        # Use a unique name not present in migration data
+        unique_name = "Klingon"
         serializer = LanguageSerializer(
             data={
-                "name": language_data[0]["name"],
+                "name": unique_name,
+                # Code is read-only and generated or handled elsewhere
             }
         )
-        # Serializer itself is valid even if model requires code on save
+        # Serializer itself should be valid
         assert serializer.is_valid(), serializer.errors
-        # We cannot save() here as it would fail at the model level
-        # due to missing code. This test only checks serializer-level validation.
+        # Check the validated data
+        assert serializer.validated_data["name"] == unique_name
 
 
 @pytest.mark.django_db

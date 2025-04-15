@@ -25,7 +25,7 @@ class CustomTokenObtainPairView(TokenObtainPairView):
 class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all().order_by("id")
     serializer_class = UserSerializer
-
+    
 
 class LanguageViewSet(viewsets.ModelViewSet):
     """

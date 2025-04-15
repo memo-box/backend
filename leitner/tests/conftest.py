@@ -1,7 +1,10 @@
 import pytest
+from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
 from leitner.models import CustomUser, Language, Box, Card
 from rest_framework.test import APIRequestFactory
+from django.utils import timezone
+import uuid
 
 
 @pytest.fixture
@@ -17,11 +20,15 @@ def user_data():
 
 
 @pytest.fixture
-def user(user_data):
-    """Creates and returns a user."""
-    return CustomUser.objects.create_user(
-        email=user_data["email"], name=user_data["name"], password=user_data["password"]
+@pytest.mark.django_db
+def test_user():
+    """Creates and returns a user with a unique email."""
+    User = get_user_model()
+    unique_email = f"testuser_{uuid.uuid4()}@example.com"
+    user = User.objects.create_user(
+        email=unique_email, password="testpass123", name="Test User"
     )
+    return user
 
 
 @pytest.fixture
@@ -35,19 +42,22 @@ def other_user_data():
 
 
 @pytest.fixture
-def other_user(other_user_data):
-    """Creates and returns another user."""
-    return CustomUser.objects.create_user(
-        email=other_user_data["email"],
-        name=other_user_data["name"],
-        password=other_user_data["password"],
+@pytest.mark.django_db
+def other_user():
+    """Creates and returns another user with a unique email."""
+    User = get_user_model()
+    unique_email = f"otheruser_{uuid.uuid4()}@example.com"
+    user = User.objects.create_user(
+        email=unique_email, password="testpass123", name="Other User"
     )
+    return user
 
 
 @pytest.fixture
-def authenticated_client(api_client, user):
+@pytest.mark.django_db
+def authenticated_client(api_client, test_user):
     """Returns an authenticated API client."""
-    api_client.force_authenticate(user=user)
+    api_client.force_authenticate(user=test_user)
     return api_client
 
 
@@ -58,27 +68,35 @@ def language_data():
 
 
 @pytest.fixture
+@pytest.mark.django_db
 def languages(language_data):
-    """Creates and returns languages."""
-    return [
-        Language.objects.create(name=data["name"], code=data["code"])
-        for data in language_data
-    ]
+    """Creates or updates and returns languages."""
+    created_languages = []
+    for data in language_data:
+        # Use update_or_create to ensure the language exists with the correct code.
+        # It matches based on the unique field 'name'.
+        language, created = Language.objects.update_or_create(
+            name=data["name"],  # Assuming 'name' is unique
+            defaults={'code': data["code"]}
+        )
+        created_languages.append(language)
+    return created_languages
 
 
 @pytest.fixture
-def box_data(user, languages):
+def box_data(test_user, languages):
     """Returns default box data."""
     return {
         "name": "Test Box",
         "description": "A test box",
-        "user": user,
+        "user": test_user,
         "source_language": languages[0],
         "target_language": languages[1],
     }
 
 
 @pytest.fixture
+@pytest.mark.django_db
 def box(box_data):
     """Creates and returns a box."""
     return Box.objects.create(**box_data)
@@ -113,16 +131,43 @@ def card_data(box):
 
 
 @pytest.fixture
+@pytest.mark.django_db
 def card(box):
-    """Create a test card."""
-    from django.utils import timezone
-    import datetime
-
+    """Fixture for creating a test card."""
     return Card.objects.create(
         source_text="Hello",
         target_text="Hola",
         box=box,
-        next_recall=timezone.now() + datetime.timedelta(days=7),  # Set future date
+        # Set next_recall slightly in the future to avoid being due immediately
+        next_recall=timezone.now() + timezone.timedelta(seconds=10),
+    )
+
+
+@pytest.fixture
+@pytest.mark.django_db
+def due_card(box):
+    """Fixture for creating a card that is due for recall."""
+    # Set next_recall to a past date to ensure it's due
+    past_date = timezone.now() - timezone.timedelta(days=1)
+    return Card.objects.create(
+        source_text="Goodbye",
+        target_text="Adiós",
+        box=box,
+        next_recall=past_date,
+    )
+
+
+@pytest.fixture
+@pytest.mark.django_db
+def not_due_card(box):
+    """Fixture for creating a card that is not due for recall."""
+    # Set next_recall to a future date
+    future_date = timezone.now() + timezone.timedelta(days=10)
+    return Card.objects.create(
+        source_text="Thank you",
+        target_text="Gracias",
+        box=box,
+        next_recall=future_date,
     )
 
 
