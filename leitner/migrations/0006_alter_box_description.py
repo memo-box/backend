@@ -4,7 +4,6 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
         ("leitner", "0005_alter_language_options_alter_language_code_and_more"),
     ]

@@ -311,11 +311,13 @@ class LanguageViewSetTestCase(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn("results", response.data)
         # Check that the response contains at least the languages from migrations/setup
-        self.assertGreaterEqual(len(response.data["results"]), 2) # Should have at least EN and ES created
+        self.assertGreaterEqual(
+            len(response.data["results"]), 2
+        )  # Should have at least EN and ES created
 
         # Check if the English language created in setUpTestData is present
         codes_in_response = [item["code"] for item in response.data["results"]]
-        self.assertIn(self.language.code, codes_in_response) # Check for 'EN'
+        self.assertIn(self.language.code, codes_in_response)  # Check for 'EN'
         # Removed the check for self.language2.code ('ES') as it seems unreliable
 
     def test_retrieve_language(self):

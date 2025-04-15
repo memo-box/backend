@@ -1,7 +1,7 @@
 import pytest
 from django.contrib.auth import get_user_model
 from rest_framework.test import APIClient
-from leitner.models import CustomUser, Language, Box, Card
+from leitner.models import Language, Box, Card
 from rest_framework.test import APIRequestFactory
 from django.utils import timezone
 import uuid
@@ -77,7 +77,7 @@ def languages(language_data):
         # It matches based on the unique field 'name'.
         language, created = Language.objects.update_or_create(
             name=data["name"],  # Assuming 'name' is unique
-            defaults={'code': data["code"]}
+            defaults={"code": data["code"]},
         )
         created_languages.append(language)
     return created_languages

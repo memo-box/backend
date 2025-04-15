@@ -3,7 +3,6 @@ from django.utils import timezone
 from datetime import timedelta
 from leitner.models import CustomUser, Language, Box, Card
 from leitner.constants import RECALL_INTERVALS
-from django.test import TestCase
 
 
 @pytest.mark.django_db

@@ -23,9 +23,13 @@ class TestUserViewSet:
 
         # Find the authenticated user in the results by checking the URL
         results = response.data["results"]
-        expected_url = reverse("customuser-detail", kwargs={"pk": authenticated_test_user.pk})
+        expected_url = reverse(
+            "customuser-detail", kwargs={"pk": authenticated_test_user.pk}
+        )
         # The request context might add the host/port, so we check if the expected path is in the url field
-        auth_user_in_results = next((u for u in results if expected_url in u.get('url', '')), None)
+        auth_user_in_results = next(
+            (u for u in results if expected_url in u.get("url", "")), None
+        )
 
         assert auth_user_in_results is not None
         assert auth_user_in_results["email"] == authenticated_test_user.email
@@ -98,20 +102,20 @@ class TestLanguageViewSet:
         while url:
             response = authenticated_client.get(url)
             assert response.status_code == status.HTTP_200_OK
-            data = response.json() # Use .json() to easily access data
+            data = response.json()  # Use .json() to easily access data
             all_results.extend(data.get("results", []))
-            url = data.get("next") # Get URL for the next page
+            url = data.get("next")  # Get URL for the next page
 
         # Now check assertions against all fetched results
-        response_languages = {lang['name']: lang for lang in all_results}
+        response_languages = {lang["name"]: lang for lang in all_results}
 
-        assert len(all_results) >= 2 # Check we have at least the two we expect
+        assert len(all_results) >= 2  # Check we have at least the two we expect
 
         # Check that the expected languages are in the response
         assert "English" in response_languages
-        assert response_languages["English"]['code'] == "en"
+        assert response_languages["English"]["code"] == "en"
         assert "Spanish" in response_languages
-        assert response_languages["Spanish"]['code'] == "es"
+        assert response_languages["Spanish"]["code"] == "es"
 
     def test_retrieve_language(self, authenticated_client, languages):
         """Test retrieving a specific language."""
@@ -215,7 +219,9 @@ class TestBoxViewSet:
             "target_language_id": languages[1].id,
             # user_id is automatically set by the view based on authentication
         }
-        response = authenticated_client.post(url, data, format='json') # Ensure format is json
+        response = authenticated_client.post(
+            url, data, format="json"
+        )  # Ensure format is json
 
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data["name"] == data["name"]
@@ -225,7 +231,9 @@ class TestBoxViewSet:
 
         # Confirm box is in database and associated with the authenticated user
         box = Box.objects.get(name=data["name"])
-        assert box.user == authenticated_test_user # Check against the authenticated user
+        assert (
+            box.user == authenticated_test_user
+        )  # Check against the authenticated user
 
     def test_update_box(self, authenticated_client, box):
         """Test updating a box."""

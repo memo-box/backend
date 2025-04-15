@@ -9,8 +9,6 @@ from leitner.serializers import (
     CardRecallSerializer,
 )
 from leitner.constants import RECALL_INTERVALS
-from rest_framework import serializers
-from ..models import Language, Box, Card
 
 
 @pytest.mark.django_db
