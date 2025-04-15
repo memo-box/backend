@@ -2,6 +2,7 @@ import pytest
 from django.utils import timezone
 from datetime import timedelta
 from leitner.models import CustomUser, Language, Box, Card
+from leitner.constants import RECALL_INTERVALS
 
 
 @pytest.mark.django_db
@@ -87,7 +88,7 @@ class TestLanguage:
 
     def test_str_method(self, languages):
         """Test the string representation of a language."""
-        assert str(languages[0]) == languages[0].name
+        assert str(languages[0]) == languages[0].code
 
 
 @pytest.mark.django_db
@@ -144,9 +145,7 @@ class TestCard:
         # Check that next_recall was updated to a future date
         assert card.next_recall > now
         # Check that next_recall is calculated correctly
-        expected_next_recall = card.last_recall + timedelta(
-            days=Card.RECALL_INTERVALS[1]
-        )
+        expected_next_recall = card.last_recall + timedelta(days=RECALL_INTERVALS[1])
         assert abs((card.next_recall - expected_next_recall).total_seconds()) < 1
         # Check that the method returns the next recall date
         assert next_recall == card.next_recall
@@ -168,9 +167,7 @@ class TestCard:
         # Check that next_recall was updated to a future date
         assert card.next_recall > now
         # Check that next_recall is calculated correctly (reset to first interval)
-        expected_next_recall = card.last_recall + timedelta(
-            days=Card.RECALL_INTERVALS[0]
-        )
+        expected_next_recall = card.last_recall + timedelta(days=RECALL_INTERVALS[0])
         assert abs((card.next_recall - expected_next_recall).total_seconds()) < 1
         # Check that the method returns the next recall date
         assert next_recall == card.next_recall
@@ -178,12 +175,12 @@ class TestCard:
     def test_record_recall_at_max_interval(self, card):
         """Test recording a successful recall when already at max interval."""
         # Set to the maximum interval
-        card.recall_count = len(Card.RECALL_INTERVALS) - 1
+        card.recall_count = len(RECALL_INTERVALS) - 1
         card.save()
 
         next_recall = card.record_recall(remembered=True)
 
         # Check that recall count stays at max
-        assert card.recall_count == len(Card.RECALL_INTERVALS) - 1
+        assert card.recall_count == len(RECALL_INTERVALS) - 1
         # Check that the method returns the next recall date
         assert next_recall == card.next_recall

@@ -70,7 +70,7 @@ class LanguageSerializer(serializers.ModelSerializer):
     class Meta:
         model = Language
         fields = ["id", "name", "code", "created_at", "updated_at"]
-        read_only_fields = ["created_at", "updated_at"]
+        read_only_fields = ["id", "code", "created_at", "updated_at"]
 
 
 class BoxSerializer(serializers.ModelSerializer):
