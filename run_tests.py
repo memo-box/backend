@@ -22,7 +22,7 @@ os.environ.update(
         "EMAIL_HOST_USER": "test@example.com",
         "EMAIL_HOST_PASSWORD": "testpass",
         "OPENAI_API_KEY": "test-key-not-for-production",
-        "OPENAI_MODEL": "gpt-4-mini",
+        "OPENAI_MODEL": "gpt-4.1-nano",
     }
 )
 
