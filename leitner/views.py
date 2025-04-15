@@ -92,6 +92,7 @@ class CardViewSet(viewsets.ModelViewSet):
         box (int): Optional. Filter cards by box ID.
         due_only (str): Optional. If "true", only returns cards that are due for review
                        (next_recall <= current time).
+        count (int): Optional. Number of cards to return. Default is 50.
     """
 
     queryset = Card.objects.all().order_by("id")
@@ -114,6 +115,7 @@ class CardViewSet(viewsets.ModelViewSet):
                       returns all cards from all boxes belonging to the user.
             due_only (str): Optional. If "true", only returns cards that are due
                           for review (next_recall <= current time).
+            count (int): Optional. Number of cards to return. Default is 50.
         """
         user = self.request.user
         if not user.is_authenticated:
@@ -128,6 +130,17 @@ class CardViewSet(viewsets.ModelViewSet):
         due_only = self.request.query_params.get("due_only", None)
         if due_only == "true":
             queryset = queryset.filter(next_recall__lte=timezone.now())
+
+        # Only apply count limit for list action
+        if self.action == "list":
+            # Get count parameter with default value of 50
+            try:
+                count = int(self.request.query_params.get("count", 50))
+                # Ensure count is at least 1 and not too large
+                count = max(1, min(count, 1000))  # Limit maximum count to 1000
+            except (ValueError, TypeError):
+                count = 50  # Default to 50 if count is invalid
+            return queryset[:count]
 
         return queryset
 
