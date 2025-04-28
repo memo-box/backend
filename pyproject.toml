@@ -1,7 +1,7 @@
 [project]
 name = "memoboxproject"
 version = "0.1.0"
-description = "Add your description here"
+description = "A Django-based RESTful backend for Memobox, a platform for learning languages with AI"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
