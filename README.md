@@ -13,9 +13,10 @@ The application can automatically generate comprehensive flashcard content with 
 - **Intelligent Translations**: Properly handles idiomatic expressions and context-aware translations between languages
 - **Detailed Definitions**: Provides dictionary-style definitions in the source language
 - **Example Sentences**: Generates contextual example sentences in both source and target languages
-- **Pronunciation Guides**: Includes IPA pronunciation transcriptions when available
+- **Pronunciation Guides**: Includes IPA pronunciation transcriptions
 
-Example API call:
+![Screenshot of swagger ui](./images/swagger-ui.png)
+# Example API call:
 ```bash
 curl -X POST http://localhost:8000/api/ai/generate-backcard/ \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
